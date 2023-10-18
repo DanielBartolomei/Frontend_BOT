@@ -140,7 +140,28 @@ NAV2D.Navigator = function(options) {
 
         //var rotation = Math.atan2(+2.0 * (pose.orientation.w * pose.orientation.z), +1.0 - 2.0 * (pose.orientation.z * pose.orientation.z));
 
+
+        // sio.emit("go_to_pose", {
+        //     "goal_pose": {
+        //         "position": {"x": 1.0, "y": 1.0, "z": 0.0},
+        //         "orientation": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}
+        //     },
+        //     "callback": "pose_callback",
+        //     "feedback_callback": "pose_callback",
+        //     "result_callback": "result"
+        // })
+
         var rotation = 2 * Math.PI - stage.rosQuaternionToGlobalTheta(pose.orientation) * (Math.PI / 180);
+
+
+        socket.emit("send-intervention", {function_name: "go_to_pose" , 
+                                            goal_pose: { position : {x : pose.position.x, y : pose.position.y, z : pose.position.z},
+                                                         orientation : {x: pose.orientation.x, y: pose.orientation.y, z: pose.orientation.z, w: pose.orientation.w}},
+                                            callback: "pose_callback",
+                                            feedback_callback: "pose_callback",
+                                            result_callback: "result"
+                    });
+
         socket.emit("send-intervention", {task_name: "goto_to_pose",task_type: "NavigateToPose", task_priority: 5, task_repetitions: 1, task_impact: "",
             task_args: ['GOAL', '[' + pose.position.x + ', ' + pose.position.y + ', ' + rotation + ']']},
             function (ret) {
