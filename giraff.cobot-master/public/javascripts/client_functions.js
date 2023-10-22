@@ -5,13 +5,14 @@
 
 var socket = io();
 var ros;
+var PORT = 9696;
 
 function launch_all() {
     init();
     init_viewer();
     init_components();
-    update_task_manager();
-    update_battery_status();
+    // update_task_manager();
+    // update_battery_status();
     set_events();
 }
 
@@ -23,10 +24,15 @@ function init(){
     });
 
     // Connect socket to Server
+    socket.connect("ws://127.0.0.1:{}".format(PORT))
+    
+    sio.emit("map", {"callback": "map_callback"})
 
-    // Emit map event
-
-    // Read map data
+    // Emit map event and read map data
+    socket.emit("map", function map_callback(data){
+        print(data);
+        socket.disconnect();
+    });
 
     // Print map data on Map Topic
 }
