@@ -20,8 +20,31 @@ module.exports = function (server) {
     
             // Emit map event and read map data
             serverSocket.emit("map", function map_callback(data){
-                print(data);
-                dataToRos = data // Translate from json to ROS msg
+                console.log(data);
+                dataToRos = 
+                "header:                                    \
+                    stamp:                                  \
+                        sec: 0                              \
+                        nanosec: 0                          \
+                    frame_id: map                           \
+                info:                                       \
+                    map_load_time:                          \
+                        sec: 0                              \
+                        nanosec: 0                          \
+                    resolution: 0.05000000074505806         \
+                    width: 328                              \
+                    height: 279                             \
+                    origin:                                 \
+                        position:                           \
+                        x: -8.18                            \
+                        y: -4.39                            \
+                        z: 0.0                              \
+                    orientation:                            \
+                        x: 0.0                              \
+                        y: 0.0                              \
+                        z: 0.0                              \
+                        w: 1.0                              \
+                data:" 
                 publisher,publish(dataToRos);
                 serverSocket.disconnect();
             });
@@ -29,10 +52,8 @@ module.exports = function (server) {
 
             socket.on('send-intervention', function (args, ret_func) {
 
-                if(args.task_name === "go_to_pose"){
-                    // go_to_pose data collection from client
-
-                    // emit data to server
+                if(args.function_name === "go_to_pose"){
+                    serverSocket.emit("go_to_pose", args);
                 }
             });
           
