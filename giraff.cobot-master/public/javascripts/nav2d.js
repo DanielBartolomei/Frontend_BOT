@@ -162,13 +162,13 @@ NAV2D.Navigator = function(options) {
                                             result_callback: "result"
                     });
 
-        socket.emit("send-intervention", {task_name: "goto_to_pose",task_type: "NavigateToPose", task_priority: 5, task_repetitions: 1, task_impact: "",
-            task_args: ['GOAL', '[' + pose.position.x + ', ' + pose.position.y + ', ' + rotation + ']']},
-            function (ret) {
-                goals[ret] = goalMarker;
-            });
+        // socket.emit("send-intervention", {task_name: "goto_to_pose",task_type: "NavigateToPose", task_priority: 5, task_repetitions: 1, task_impact: "",
+        //     task_args: ['GOAL', '[' + pose.position.x + ', ' + pose.position.y + ', ' + rotation + ']']},
+        //     function (ret) {
+        //         goals[ret] = goalMarker;
+        //     });
 
-        goal.send();
+        // goal.send();
 
         goalMarker.x = pose.position.x;
         goalMarker.y = -pose.position.y;

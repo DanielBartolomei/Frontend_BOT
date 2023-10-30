@@ -3,6 +3,7 @@ module.exports = function (server) {
     var rclnodejs = require('rclnodejs');
     var socket_global;
     
+    const PORT = 9696;
 
     var io = require('socket.io').listen(server);
 
@@ -20,33 +21,8 @@ module.exports = function (server) {
     
             // Emit map event and read map data
             serverSocket.emit("map", function map_callback(data){
-                console.log(data);
-                let msgObj = rlcsnodejs.createMessageObject('nav_msgs/msg/OccupancyGrid');
-                msgObj.header = JSON.parse(data).header;
-                msgObj.data = JSON.parse(data).body;
-                // "header:                                    \
-                //     stamp:                                  \
-                //         sec: 0                              \
-                //         nanosec: 0                          \
-                //     frame_id: map                           \
-                // info:                                       \
-                //     map_load_time:                          \
-                //         sec: 0                              \
-                //         nanosec: 0                          \
-                //     resolution: 0.05000000074505806         \
-                //     width: 328                              \
-                //     height: 279                             \
-                //     origin:                                 \
-                //         position:                           \
-                //         x: -8.18                            \
-                //         y: -4.39                            \
-                //         z: 0.0                              \
-                //     orientation:                            \
-                //         x: 0.0                              \
-                //         y: 0.0                              \
-                //         z: 0.0                              \
-                //         w: 1.0                              \
-                // data:" 
+                let msgObj = rclnodejs.createMessageObject('nav_msgs/msg/OccupancyGrid');
+                msgObj = fill_map_msg(msgObj, data);
                 publisher,publish(msgObj);
                 serverSocket.disconnect();
             });
@@ -60,47 +36,32 @@ module.exports = function (server) {
             });
           
         });
-    });
-
-    
-
-    
-        // socket_global = socket;
-
-        // //Intervention handler
-        // socket.on('send-intervention', function (args, ret_func) {
-        //     intervention_sender.sendRequest(args, (response) => {
-
-        //             //if the intervention is a go_to_point the id is saved in goals array
-        //             if(args.task_name === "goto_to_pose"){
-        //                 var pose = JSON.parse(args.task_args[1]);
-        //                 goals[parseInt(response.task_id)] = {x: pose[0], y: pose[1], z: pose[2]};
-        //             }
-
-        //             if (ret_func != null)
-        //                 ret_func(response.task_id);
-        //         });
-        // });
-
-        // //get behavior tree
-        // socket.on('get-behavior-tree', function () {
-        //     io.emit("update-task-manager", tree);
-        // });
-
-        // //delete intervention
-        // socket.on("delete-intervention", function (id) {
-        //     if (id != -1){
-        //         intervention_abort.call({task_id: id, info: ""}).then(function (response) {});
-
-        //         //if the id is contained in goals the relative position marker in the map must be removed
-        //         remove_goal(id);
-        //     }
-        // });
-
-        // //return to the client the position already set
-        // socket.on("get-positions", function (ret_func) {
-        //     if(ret_func != null)
-        //         ret_func(goals);
-        // });
-    
+    });    
 };
+
+
+function make_map_msg(msgObj, data){
+    jsonData = JSON.parse(data);
+    
+    // Header
+    msgObj.header.stamp = jsonData.body.header.stamp;
+    msgObj.header.frame_id = jsonData.body.header.frame_id;
+
+    // Info
+    msgObj.info.map_load_time = jsonData.body.info.map_load_time;
+    msgObj.info.resolution = jsonData.body.info.resolution;
+    msgObj.info.width = jsonData.body.info.height;
+    msgObj.info.origin.position.x = jsonData.body.info.origin.position.x;
+    msgObj.info.origin.position.y = jsonData.body.info.origin.position.y;
+    msgObj.info.origin.position.z = jsonData.body.info.origin.position.z;
+
+    msgObj.info.origin.orientation.x = jsonData.body.info.origin.orientation.x;
+    msgObj.info.origin.orientation.y = jsonData.body.info.origin.orientation.y;
+    msgObj.info.origin.orientation.z = jsonData.body.info.origin.orientation.z;
+    msgObj.info.origin.orientation.w = jsonData.body.info.origin.orientation.w;
+
+    // Data
+    msgObj.data = jsonData.body.data;
+
+    return msgObj;
+}

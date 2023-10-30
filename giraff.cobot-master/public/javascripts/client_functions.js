@@ -22,19 +22,6 @@ function init(){
     ros = new ROSLIB.Ros({
         url : 'ws://localhost:9090'
     });
-
-    // Connect socket to Server
-    socket.connect("ws://127.0.0.1:{}".format(PORT))
-    
-    sio.emit("map", {"callback": "map_callback"})
-
-    // Emit map event and read map data
-    socket.emit("map", function map_callback(data){
-        print(data);
-        socket.disconnect();
-    });
-
-    // Print map data on Map Topic
 }
 
 function init_viewer() {
