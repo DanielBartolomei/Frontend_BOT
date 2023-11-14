@@ -1,67 +1,81 @@
 
 module.exports = function (server) {
     var rclnodejs = require('rclnodejs');
-    var socket_global;
-    
-    const PORT = 9696;
 
-    var io = require('socket.io').listen(server);
+    // Socket that listens to events coming from the HTTP Web App
+    var socketWA = require('socket.io').listen(server);
+
+    // Socket that emits events to the socket_publisher server socket
+    const { io } = require("socket.io-client");
+    const PORT = 9696;
+    const HOST = '127.0.0.1';
+
+    const socketSP = io(`http://${HOST}:${PORT}`);
+    console.log('socket_publisher Socket instantiated!');
+
+    // Socket that listens to events coming from the Frontend of the WebApp
+    const socketFE = io();
+
+    var connected = false;
 
     rclnodejs.init().then(() => {
+        const mapPubNode = new rclnodejs.Node('nodejsMapPublisher');
 
-        io.on('connection', function (socket) {
-            var serverSocket;
-            const node = new rclnodejs.Node('nodejsMapPublisher');
-            const publisher = node.createPublisher('nav_msgs/msg/OccupancyGrid', 'map');
+        socketWA.on('connection', function (socket) {
+            const publisher = mapPubNode.createPublisher('nav_msgs/msg/OccupancyGrid', 'map');
             publisher.qos.durability = rclnodejs.QoS.DurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
             publisher.qos.history = rclnodejs.QoS.HistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST;
     
             // Connect socket to Server
-            serverSocket.connect("ws://127.0.0.1:{}".format(PORT))
-    
+            if(!connected)
+                socketSP.connect("ws://127.0.0.1:"+PORT);
+
             // Emit map event and read map data
-            serverSocket.emit("map", function map_callback(data){
+            socketSP.emit("map", {"callback": "map_callback"});
+
+            socketSP.on("map_callback", function (data){
                 let msgObj = rclnodejs.createMessageObject('nav_msgs/msg/OccupancyGrid');
                 msgObj = fill_map_msg(msgObj, data);
-                publisher,publish(msgObj);
-                serverSocket.disconnect();
+                
+                publisher.publish(msgObj);
+                // socketSP.disconnect();
             });
+        });
 
-
-            socket.on('send-intervention', function (args, ret_func) {
-
-                if(args.function_name === "go_to_pose"){
-                    serverSocket.emit("go_to_pose", args);
-                }
-            });
-          
+        socketFE.on('send-intervention', function (args) {
+            console.log("GOTOPOSE");
+            if(args.function_name === "go_to_pose"){
+                socketSP.emit("go_to_pose", args);
+            }
         });
     });    
 };
 
 
-function make_map_msg(msgObj, data){
-    jsonData = JSON.parse(data);
+function fill_map_msg(msgObj, data){
+    // jsonData = JSON.parse(data);
     
     // Header
-    msgObj.header.stamp = jsonData.body.header.stamp;
-    msgObj.header.frame_id = jsonData.body.header.frame_id;
+    msgObj.header.stamp = data.body.header.stamp;
+    msgObj.header.frame_id = data.body.header.frame_id;
 
     // Info
-    msgObj.info.map_load_time = jsonData.body.info.map_load_time;
-    msgObj.info.resolution = jsonData.body.info.resolution;
-    msgObj.info.width = jsonData.body.info.height;
-    msgObj.info.origin.position.x = jsonData.body.info.origin.position.x;
-    msgObj.info.origin.position.y = jsonData.body.info.origin.position.y;
-    msgObj.info.origin.position.z = jsonData.body.info.origin.position.z;
+    msgObj.info.map_load_time = data.body.info.map_load_time;
+    msgObj.info.resolution = data.body.info.resolution;
+    msgObj.info.width = data.body.info.width;
+    msgObj.info.height = data.body.info.height;
 
-    msgObj.info.origin.orientation.x = jsonData.body.info.origin.orientation.x;
-    msgObj.info.origin.orientation.y = jsonData.body.info.origin.orientation.y;
-    msgObj.info.origin.orientation.z = jsonData.body.info.origin.orientation.z;
-    msgObj.info.origin.orientation.w = jsonData.body.info.origin.orientation.w;
+    msgObj.info.origin.position.x = data.body.info.origin.position.x;
+    msgObj.info.origin.position.y = data.body.info.origin.position.y;
+    msgObj.info.origin.position.z = data.body.info.origin.position.z;
+
+    msgObj.info.origin.orientation.x = data.body.info.origin.orientation.x;
+    msgObj.info.origin.orientation.y = data.body.info.origin.orientation.y;
+    msgObj.info.origin.orientation.z = data.body.info.origin.orientation.z;
+    msgObj.info.origin.orientation.w = data.body.info.origin.orientation.w;
 
     // Data
-    msgObj.data = jsonData.body.data;
+    msgObj.data = data.body.data;
 
     return msgObj;
 }

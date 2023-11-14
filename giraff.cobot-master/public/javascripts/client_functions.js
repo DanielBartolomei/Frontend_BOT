@@ -2,29 +2,22 @@
  * Setup all GUI elements when the page is loaded.
  */
 
-
-var socket = io();
-var ros;
-var PORT = 9696;
+const PORT = 3000;
+const HOST = '127.0.0.1';
 
 function launch_all() {
-    init();
-    init_viewer();
+    init_ros();
     init_components();
-    // update_task_manager();
-    // update_battery_status();
+    update_task_manager();
+    update_battery_status();
     set_events();
 }
 
-function init(){
-
+function init_ros() {
     // Connect to ROS.
-    ros = new ROSLIB.Ros({
+    var ros = new ROSLIB.Ros({
         url : 'ws://localhost:9090'
     });
-}
-
-function init_viewer() {
 
     // Create the main viewer.
     var viewer = new ROS2D.Viewer({
@@ -41,7 +34,6 @@ function init_viewer() {
         rootObject : viewer.scene,
         viewer : viewer,
         withOrientation : true
-    
     });
 
     window.onresize = function(event) {
@@ -83,45 +75,45 @@ function init_components(){
     });
 }
 
-// function update_task_manager(){
+function update_task_manager(){
 
-//     get_data = function (json, level) {
-//         var data = {text: json.Node.name,
-//                 id_intervention: json.Node.id,
-//                 href: "#" + json.Node.id,
-//                 delete:false};
+    get_data = function (json, level) {
+        var data = {text: json.Node.name,
+                id_intervention: json.Node.id,
+                href: "#" + json.Node.id,
+                delete:false};
 
-//         var tags = 0;
-//         var nodes = [];
-//         for (var i = 0; i < json.Node.children.length; ++i){
-//             var ret = get_data(json.Node.children[i], level + 1);
-//             nodes.push(ret[0]);
+        var tags = 0;
+        var nodes = [];
+        for (var i = 0; i < json.Node.children.length; ++i){
+            var ret = get_data(json.Node.children[i], level + 1);
+            nodes.push(ret[0]);
 
-//             tags += ret[1];
-//         }
+            tags += ret[1];
+        }
 
-//         //to add button delete in treeview
-//         if (level == 1)
-//             data.delete = true;
+        //to add button delete in treeview
+        if (level == 1)
+            data.delete = true;
 
-//         data["tags"] = [tags.toString()];
-//         if (nodes.length > 0)
-//             data["nodes"] = nodes;
-//         return [data, tags + 1];
-//     };
+        data["tags"] = [tags.toString()];
+        if (nodes.length > 0)
+            data["nodes"] = nodes;
+        return [data, tags + 1];
+    };
 
-//     socket.on("update-task-manager", function (tree) {
-//         var json = JSON.parse(tree.replace(new RegExp("\'", 'g'), "\""));
-//         var parameters = {color: "#428bca",
-//             expandIcon: 'fa fa-chevron-right',
-//             collapseIcon: 'fa fa-chevron-down',
-//             nodeIcon: 'fa fa-bookmark',
-//             showTags: true,
-//             data: [get_data(json, 0)[0]]};
-//             $("#tree").treeview(parameters);
-//     });
-//     socket.emit("get-behavior-tree");
-// }
+    socket.on("update-task-manager", function (tree) {
+        var json = JSON.parse(tree.replace(new RegExp("\'", 'g'), "\""));
+        var parameters = {color: "#428bca",
+            expandIcon: 'fa fa-chevron-right',
+            collapseIcon: 'fa fa-chevron-down',
+            nodeIcon: 'fa fa-bookmark',
+            showTags: true,
+            data: [get_data(json, 0)[0]]};
+            $("#tree").treeview(parameters);
+    });
+    socket.emit("get-behavior-tree");
+}
 
 function update_battery_status() {
 

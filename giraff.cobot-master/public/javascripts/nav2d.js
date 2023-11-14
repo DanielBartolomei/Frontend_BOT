@@ -26,17 +26,9 @@ var NAV2D = NAV2D || {
  *   * viewer - the main viewer to render to
  */
 
-//In this array are stored goals sent by
-var goals = {};
-var socket = io();
-//variable that contains the map of the widget
+// Socket connected to the Web App HTTP server socket
+var socket = io(`http://${HOST}:${PORT}`);
 var map;
-
-//remove the goal
-socket.on('remove-goal', function(id) {
-    if(goals[id] != null)
-        map.removeChild(goals[id]);
-});
 
 NAV2D.ImageMapClientNav = function(options) {
     var that = this;
@@ -152,7 +144,7 @@ NAV2D.Navigator = function(options) {
         // })
 
         var rotation = 2 * Math.PI - stage.rosQuaternionToGlobalTheta(pose.orientation) * (Math.PI / 180);
-
+        console.log("Click");
 
         socket.emit("send-intervention", {function_name: "go_to_pose" , 
                                             goal_pose: { position : {x : pose.position.x, y : pose.position.y, z : pose.position.z},
@@ -362,7 +354,7 @@ NAV2D.Navigator = function(options) {
  *   * withOrientation (optional) - if the Navigator should consider the robot orientation (default: false)
  *   * viewer - the main viewer to render to
  */
-NAV2D.OccupancyGridClientNav = function(options) {
+NAV2D.OccupancyGridClientNav = function(options, socket) {
     var that = this;
     options = options || {};
     this.ros = options.ros;
@@ -373,7 +365,7 @@ NAV2D.OccupancyGridClientNav = function(options) {
     this.rootObject = options.rootObject || new createjs.Container();
     this.viewer = options.viewer;
     this.withOrientation = options.withOrientation || false;
-
+    socketWA = socket;
     this.navigator = null;
 
     
