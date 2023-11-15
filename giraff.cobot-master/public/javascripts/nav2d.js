@@ -26,8 +26,7 @@ var NAV2D = NAV2D || {
  *   * viewer - the main viewer to render to
  */
 
-// Socket connected to the Web App HTTP server socket
-var socket = io(`http://${HOST}:${PORT}`);
+var socket = io("127.0.0.1:3000");
 var map;
 
 NAV2D.ImageMapClientNav = function(options) {
@@ -145,6 +144,7 @@ NAV2D.Navigator = function(options) {
 
         var rotation = 2 * Math.PI - stage.rosQuaternionToGlobalTheta(pose.orientation) * (Math.PI / 180);
         console.log("Click");
+        // Socket connected to the Web App HTTP server socket
 
         socket.emit("send-intervention", {function_name: "go_to_pose" , 
                                             goal_pose: { position : {x : pose.position.x, y : pose.position.y, z : pose.position.z},
@@ -392,36 +392,34 @@ NAV2D.OccupancyGridClientNav = function(options, socket) {
     });
 
     //the server timeout is used to allow the stage to update, otherwise the scale is wrong (set by default at 1)
-    setTimeout(function() {
-        //Restore position markers if present
-        socket.emit("get-positions", function (positions) {
-            for (var key in positions) {
-                var stage;
-                if (that.rootObject instanceof createjs.Stage) {
-                    stage = that.rootObject;
-                } else {
-                    stage = that.rootObject.getStage();
-                }
+    // setTimeout(function() {
+    //     //Restore position markers if present
+    //     socket.emit("get-positions", function (positions) {
+    //         for (var key in positions) {
+    //             var stage;
+    //             if (that.rootObject instanceof createjs.Stage) {
+    //                 stage = that.rootObject;
+    //             } else {
+    //                 stage = that.rootObject.getStage();
+    //             }
 
-                var goalMarker = new ROS2D.NavigationArrow({
-                    size: 15,
-                    strokeSize: 1,
-                    fillColor: createjs.Graphics.getRGB(255, 64, 128, 0.66),
-                    pulse: true
-                });
+    //             var goalMarker = new ROS2D.NavigationArrow({
+    //                 size: 15,
+    //                 strokeSize: 1,
+    //                 fillColor: createjs.Graphics.getRGB(255, 64, 128, 0.66),
+    //                 pulse: true
+    //             });
 
-                var pose = positions[key];
+    //             var pose = positions[key];
 
-                goalMarker.x = pose.x;
-                goalMarker.y = -pose.y;
-                goalMarker.rotation = ((Math.PI * 2 - pose.z) * (180 / Math.PI));
-                goalMarker.scaleX = 1.0 / stage.scaleX;
-                goalMarker.scaleY = 1.0 / stage.scaleY;
-                that.rootObject.addChild(goalMarker);
-
-                goals[key] = goalMarker;
-            }
-        });
-    }, 200);
+    //             goalMarker.x = pose.x;
+    //             goalMarker.y = -pose.y;
+    //             goalMarker.rotation = ((Math.PI * 2 - pose.z) * (180 / Math.PI));
+    //             goalMarker.scaleX = 1.0 / stage.scaleX;
+    //             goalMarker.scaleY = 1.0 / stage.scaleY;
+    //             that.rootObject.addChild(goalMarker);
+    //         }
+    //     });
+    // }, 200);
 
 };

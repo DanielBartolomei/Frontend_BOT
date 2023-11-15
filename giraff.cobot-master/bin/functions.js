@@ -1,12 +1,15 @@
 
-module.exports = function (server) {
+module.exports = async function (server) {
     var rclnodejs = require('rclnodejs');
 
     // Socket that listens to events coming from the HTTP Web App
-    var socketWA = require('socket.io').listen(server);
+    const options = { /* ... */ };
+    var socketWA = require('socket.io')(server,options);
+
+    // var socket_global = 
 
     // Socket that emits events to the socket_publisher server socket
-    const { io } = require("socket.io-client");
+    var { io } = require("socket.io-client");
     const PORT = 9696;
     const HOST = '127.0.0.1';
 
@@ -14,21 +17,18 @@ module.exports = function (server) {
     console.log('socket_publisher Socket instantiated!');
 
     // Socket that listens to events coming from the Frontend of the WebApp
-    const socketFE = io();
-
     var connected = false;
 
-    rclnodejs.init().then(() => {
-        const mapPubNode = new rclnodejs.Node('nodejsMapPublisher');
+    await rclnodejs.init();
+    const mapPubNode = new rclnodejs.Node('nodejsMapPublisher');
 
-        socketWA.on('connection', function (socket) {
+    socketWA.on('connection', function (socket) {
+        if(!socketSP.connected){
             const publisher = mapPubNode.createPublisher('nav_msgs/msg/OccupancyGrid', 'map');
             publisher.qos.durability = rclnodejs.QoS.DurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
             publisher.qos.history = rclnodejs.QoS.HistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST;
-    
-            // Connect socket to Server
-            if(!connected)
-                socketSP.connect("ws://127.0.0.1:"+PORT);
+
+            socketSP.connect("ws://127.0.0.1:"+PORT);
 
             // Emit map event and read map data
             socketSP.emit("map", {"callback": "map_callback"});
@@ -36,19 +36,23 @@ module.exports = function (server) {
             socketSP.on("map_callback", function (data){
                 let msgObj = rclnodejs.createMessageObject('nav_msgs/msg/OccupancyGrid');
                 msgObj = fill_map_msg(msgObj, data);
-                
+            
                 publisher.publish(msgObj);
-                // socketSP.disconnect();
             });
-        });
+        }
+    });
 
-        socketFE.on('send-intervention', function (args) {
-            console.log("GOTOPOSE");
+    socketWA.on('send-intervention', function (args) {
+        console.log("GOTOPOSE");
+
+        if(socketSP.connected){
             if(args.function_name === "go_to_pose"){
                 socketSP.emit("go_to_pose", args);
             }
-        });
-    });    
+        }
+        
+    });
+  
 };
 
 
