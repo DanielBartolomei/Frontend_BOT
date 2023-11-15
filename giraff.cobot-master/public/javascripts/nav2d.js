@@ -26,7 +26,7 @@ var NAV2D = NAV2D || {
  *   * viewer - the main viewer to render to
  */
 
-var socket = io("127.0.0.1:3000");
+const socket = io("http://127.0.0.1:3000");
 var map;
 
 NAV2D.ImageMapClientNav = function(options) {

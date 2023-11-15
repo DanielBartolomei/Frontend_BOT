@@ -4,15 +4,13 @@ module.exports = async function (server) {
 
     // Socket that listens to events coming from the HTTP Web App
     const options = { /* ... */ };
-    var socketWA = require('socket.io')(server,options);
+    const { io } = require("socket.io-client");
 
-    // var socket_global = 
+    const socketWA = require('socket.io')(server, options);
 
     // Socket that emits events to the socket_publisher server socket
-    var { io } = require("socket.io-client");
     const PORT = 9696;
     const HOST = '127.0.0.1';
-
     const socketSP = io(`http://${HOST}:${PORT}`);
     console.log('socket_publisher Socket instantiated!');
 
