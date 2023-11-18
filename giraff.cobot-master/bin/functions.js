@@ -21,23 +21,24 @@ module.exports = async function (server) {
     const mapPubNode = new rclnodejs.Node('nodejsMapPublisher');
 
     socketWA.on('connection', function (socket) {
-        if(!socketSP.connected){
-            const publisher = mapPubNode.createPublisher('nav_msgs/msg/OccupancyGrid', 'map');
-            publisher.qos.durability = rclnodejs.QoS.DurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
-            publisher.qos.history = rclnodejs.QoS.HistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST;
+        // if(!socketSP.connected){
+        //     const publisher = mapPubNode.createPublisher('nav_msgs/msg/OccupancyGrid', 'map');
+        //     publisher.qos.durability = rclnodejs.QoS.DurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
+        //     publisher.qos.history = rclnodejs.QoS.HistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST;
 
-            socketSP.connect("ws://127.0.0.1:"+PORT);
+        //     socketSP.connect("ws://127.0.0.1:"+PORT);
 
-            // Emit map event and read map data
-            socketSP.emit("map", {"callback": "map_callback"});
+        //     // Emit map event and read map data
+        //     socketSP.emit("map", {"callback": "map_callback"});
 
-            socketSP.on("map_callback", function (data){
-                let msgObj = rclnodejs.createMessageObject('nav_msgs/msg/OccupancyGrid');
-                msgObj = fill_map_msg(msgObj, data);
+        //     socketSP.on("map_callback", function (data){
+        //         let msgObj = rclnodejs.createMessageObject('nav_msgs/msg/OccupancyGrid');
+        //         msgObj = fill_map_msg(msgObj, data);
             
-                publisher.publish(msgObj);
-            });
-        }
+        //         publisher.publish(msgObj);
+        //     });
+        // }
+        console.log("MAP");
     });
 
     socketWA.on('send-intervention', function (args) {
